@@ -1,0 +1,35 @@
+# FORMGUARD AI - Requirements
+# Core Framework
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+
+# Document Processing
+PyMuPDF>=1.23.0
+Pillow>=10.0.0
+opencv-python-headless>=4.8.0
+pytesseract>=0.3.10
+
+# AI/ML
+google-generativeai>=0.3.0
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-google-genai>=0.0.5
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+
+# Data Processing
+pydantic>=2.0.0
+pandas>=2.0.0
+
+# Visualization
+plotly>=5.18.0
+
+# PDF Report Generation
+reportlab>=4.0.0
+
+# Text Processing
+rapidfuzz>=3.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0

@@ -1,0 +1,74 @@
+{
+    "scheme_id": "mahadbt_postmatric",
+    "scheme_name": "MahaDBT Post-Matric Scholarship",
+    "source": "https://mahadbt.maharashtra.gov.in/",
+    "last_updated": "2025-01-01",
+    "note": "This file contains reference information derived from the official MahaDBT portal. It is not an official government document. Always verify requirements on the official portal.",
+    "eligibility_criteria": {
+        "domicile": "Maharashtra",
+        "education_level": "Post-Matric (Class 11 and above)",
+        "categories": ["SC", "ST", "OBC", "VJNT", "SBC", "General (EWS)"],
+        "income_limits": {
+            "SC": 250000,
+            "ST": 250000,
+            "OBC": 250000,
+            "VJNT": 250000,
+            "SBC": 250000,
+            "General (EWS)": 800000
+        }
+    },
+    "required_documents": [
+        {
+            "type": "income_certificate",
+            "name": "Income Certificate (Utpanna Dakhla)",
+            "description": "Annual family income certificate issued by Tahsildar or competent authority",
+            "validity": "1 financial year",
+            "mandatory": true
+        },
+        {
+            "type": "caste_certificate",
+            "name": "Caste Certificate (Jaat Pramanpatra)",
+            "description": "Caste certificate issued by competent authority in prescribed format",
+            "validity": "Lifetime (unless challenged)",
+            "mandatory": true
+        },
+        {
+            "type": "domicile_certificate",
+            "name": "Domicile Certificate (Abhivas Pramanpatra)",
+            "description": "Certificate proving domicile of Maharashtra",
+            "validity": "Lifetime",
+            "mandatory": true
+        },
+        {
+            "type": "college_bonafide",
+            "name": "College Bonafide / Admission Letter",
+            "description": "Current year bonafide certificate from the institution",
+            "validity": "Current academic year",
+            "mandatory": true
+        },
+        {
+            "type": "marksheet",
+            "name": "Previous Year Marksheet",
+            "description": "Marksheet or grade card of the last passed examination",
+            "validity": "N/A",
+            "mandatory": true
+        },
+        {
+            "type": "bank_document",
+            "name": "Bank Passbook / Cancelled Cheque",
+            "description": "Bank passbook first page or cancelled cheque showing account details",
+            "validity": "Account must be active",
+            "mandatory": true
+        }
+    ],
+    "common_rejection_reasons": [
+        "Name mismatch across documents",
+        "Income exceeds scheme limit",
+        "Missing or unreadable documents",
+        "Wrong academic year",
+        "Bank account not in student name",
+        "Expired certificates",
+        "Category mismatch",
+        "College not approved"
+    ]
+}
