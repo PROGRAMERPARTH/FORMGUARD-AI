@@ -6,6 +6,9 @@
 
 Built for **IDEA//FORGE Online Hackathon** | Track 1: Civic Pulse, Digital Governance & Public Information
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/PROGRAMERPARTH/FORMGUARD-AI)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-PROGRAMERPARTH%2FFORMGUARD--AI-blue?logo=github)](https://github.com/PROGRAMERPARTH/FORMGUARD-AI)
+
 ---
 
 ## 🎯 Problem
