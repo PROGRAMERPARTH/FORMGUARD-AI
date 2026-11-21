@@ -46,7 +46,7 @@ def render_assistant():
         )
         if selected_lang != language:
             st.session_state.language = selected_lang
-            language = selected_lang
+            st.rerun()
 
     st.markdown("---")
 

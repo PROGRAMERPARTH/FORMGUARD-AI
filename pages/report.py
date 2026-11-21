@@ -165,6 +165,7 @@ def render_report():
 
     col_dl1, col_dl2, col_dl3 = st.columns([1, 2, 1])
     with col_dl2:
+        # Check if already generated or button clicked
         if st.button("📄 Generate PDF Report", type="primary", use_container_width=True):
             with st.spinner("Generating PDF report..."):
                 try:
@@ -180,20 +181,24 @@ def render_report():
                         st.session_state.total_reports_generated = (
                             st.session_state.get("total_reports_generated", 0) + 1
                         )
-
-                        st.download_button(
-                            label="⬇️ Download Verification Report PDF",
-                            data=pdf_bytes,
-                            file_name=f"FormGuard_Report_{verification_id}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True,
-                        )
+                        st.session_state.generated_pdf_bytes = pdf_bytes
+                        st.session_state.generated_pdf_filename = f"FormGuard_Report_{verification_id}.pdf"
                         st.success("✅ Report generated successfully!")
                     else:
                         st.error("Failed to generate PDF report.")
                 except Exception as e:
                     st.error(f"Error generating report: {str(e)}")
                     st.info("You can still review the on-screen report above.")
+
+        # Always show download button if PDF exists in state
+        if st.session_state.get("generated_pdf_bytes"):
+            st.download_button(
+                label="⬇️ Download Verification Report PDF",
+                data=st.session_state.generated_pdf_bytes,
+                file_name=st.session_state.get("generated_pdf_filename", f"FormGuard_Report_{verification_id}.pdf"),
+                mime="application/pdf",
+                use_container_width=True,
+            )
 
     # ── Navigation ──
     st.markdown("<br>", unsafe_allow_html=True)

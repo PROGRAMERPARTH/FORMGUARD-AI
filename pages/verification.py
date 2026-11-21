@@ -150,7 +150,7 @@ def render_verification():
         if severity_filter != "All":
             sorted_checks = [c for c in sorted_checks if c.get("severity") == severity_filter]
 
-        for check in sorted_checks:
+        for i, check in enumerate(sorted_checks):
             severity = check.get("severity", "PASS")
 
             # Style based on severity
@@ -189,6 +189,16 @@ def render_verification():
                 # Recommended action
                 if check.get("recommended_action"):
                     st.info(f"💡 **Recommended Action:** {check['recommended_action']}")
+
+                if severity in ["CRITICAL", "WARNING", "MANUAL_REVIEW"]:
+                    col_act1, col_act2 = st.columns([2, 1])
+                    with col_act2:
+                        chk_key = f"chk_ai_{check.get('check_id', str(i))}"
+                        if st.button("🤖 Explain with AI", key=chk_key, use_container_width=True):
+                            from pages.assistant import _explain_issue_in_chat
+                            _explain_issue_in_chat(check, st.session_state.get("language", "en"))
+                            st.session_state.current_page = "assistant"
+                            st.rerun()
 
         # ── Checklist Summary ──
         st.markdown("---")
