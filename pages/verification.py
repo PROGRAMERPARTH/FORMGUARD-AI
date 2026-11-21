@@ -1,6 +1,6 @@
 """
 FORMGUARD AI - Cross-Document Verification Page
-The core verification engine display with detailed results.
+The core verification engine display with interactive filtering, AI jump, and remediation checklist.
 """
 
 import streamlit as st
@@ -12,21 +12,25 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import DOCUMENT_TYPES, SUPPORTED_SCHEMES, DISCLAIMER
 from modules.validation_engine import ValidationEngine
+from utils.ui_components import render_workflow_stepper
 
 
 def render_verification():
     """Render the cross-document verification page."""
+    # Render Workflow Stepper at top
+    render_workflow_stepper("verification")
+
     st.markdown("""
     <div class="formguard-header">
-        <h1>✅ Cross-Document Verification</h1>
-        <div class="tagline">Intelligent consistency checks across all your documents</div>
+        <h1>✅ Cross-Document Verification Engine</h1>
+        <div class="tagline">Deterministic cross-document consistency checks, scheme rule matching, and preflight audit</div>
     </div>
     """, unsafe_allow_html=True)
 
     extractions = st.session_state.get("extractions", {})
     if not extractions:
         st.warning("⚠️ No document extractions available. Please extract document data first.")
-        if st.button("← Go to Document Intelligence"):
+        if st.button("← Go to Document Intelligence", type="primary"):
             st.session_state.current_page = "extraction"
             st.rerun()
         return
@@ -37,27 +41,33 @@ def render_verification():
     if not verification_result:
         st.markdown("""
         <div class="info-card">
-            <strong>🔍 Ready to Verify</strong><br>
-            Click below to run cross-document verification. The system will check for:
-            <ul>
-                <li>Name consistency across all documents</li>
-                <li>Date and academic year validity</li>
-                <li>Required document presence</li>
-                <li>Missing fields and information gaps</li>
-                <li>Certificate validity rules</li>
-                <li>Scheme-specific requirements</li>
-            </ul>
+            <h4 style="margin: 0 0 0.5rem; color: #1B2A4A;">🔍 Ready for Cross-Document Preflight Audit</h4>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">
+                The validation engine runs 8 deterministic checks against official MahaDBT rules:
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; color: #334155;">
+                <div>✓ Cross-certificate Name & Initials Consistency</div>
+                <div>✓ Academic Year & Bonafide Alignment</div>
+                <div>✓ Mandatory Document Presence</div>
+                <div>✓ Caste & Income Eligibility Thresholds</div>
+                <div>✓ Duplicate Document Detection</div>
+                <div>✓ Critical Field Completeness</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("✅ Run Cross-Document Verification", type="primary", use_container_width=True):
+        if st.button("✅ Run Preflight Verification", type="primary", use_container_width=True):
             _run_verification(extractions)
             st.rerun()
     else:
-        if st.button("🔄 Re-run Verification"):
-            st.session_state.verification_result = None
-            _run_verification(extractions)
-            st.rerun()
+        v_col1, v_col2 = st.columns([3, 1])
+        with v_col1:
+            st.caption("Verification completed. Filter checks below or click 'Explain with AI' on any flagged issue.")
+        with v_col2:
+            if st.button("🔄 Re-run Verification", use_container_width=True):
+                st.session_state.verification_result = None
+                _run_verification(extractions)
+                st.rerun()
 
     # ── Display Results ──
     if verification_result:
@@ -66,185 +76,217 @@ def render_verification():
         # ── Summary Metrics ──
         col1, col2, col3, col4 = st.columns(4)
 
+        pass_c = verification_result.get("pass_count", 0)
+        warn_c = verification_result.get("warning_count", 0)
+        crit_c = verification_result.get("critical_count", 0)
+        man_c = verification_result.get("manual_review_count", 0)
+
         with col1:
             st.markdown(f"""
-            <div class="metric-card" style="border-left: 4px solid #10B981;">
-                <div class="metric-value" style="color: #10B981;">{verification_result.get('pass_count', 0)}</div>
-                <div class="metric-label">Passed</div>
+            <div class="metric-card" style="border-top: 3px solid #10B981;">
+                <div class="metric-value" style="color: #10B981;">{pass_c}</div>
+                <div class="metric-label">Passed Checks</div>
             </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown(f"""
-            <div class="metric-card" style="border-left: 4px solid #F59E0B;">
-                <div class="metric-value" style="color: #F59E0B;">{verification_result.get('warning_count', 0)}</div>
+            <div class="metric-card" style="border-top: 3px solid #F59E0B;">
+                <div class="metric-value" style="color: #F59E0B;">{warn_c}</div>
                 <div class="metric-label">Warnings</div>
             </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown(f"""
-            <div class="metric-card" style="border-left: 4px solid #EF4444;">
-                <div class="metric-value" style="color: #EF4444;">{verification_result.get('critical_count', 0)}</div>
-                <div class="metric-label">Critical</div>
+            <div class="metric-card" style="border-top: 3px solid #EF4444;">
+                <div class="metric-value" style="color: #EF4444;">{crit_c}</div>
+                <div class="metric-label">Critical Issues</div>
             </div>
             """, unsafe_allow_html=True)
 
         with col4:
             st.markdown(f"""
-            <div class="metric-card" style="border-left: 4px solid #3B82F6;">
-                <div class="metric-value" style="color: #3B82F6;">{verification_result.get('manual_review_count', 0)}</div>
+            <div class="metric-card" style="border-top: 3px solid #3B82F6;">
+                <div class="metric-value" style="color: #3B82F6;">{man_c}</div>
                 <div class="metric-label">Manual Review</div>
             </div>
             """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Overall Readiness ──
+        # ── Overall Readiness Banner ──
         readiness = verification_result.get("overall_readiness", 0)
         if readiness >= 80:
             readiness_color = "#10B981"
-            readiness_label = "Good"
+            readiness_title = "EXCELLENT PREFLIGHT READINESS"
+            readiness_desc = "Your documents meet major consistency requirements. Review minor suggestions before portal submission."
+            status_icon = "🟢"
         elif readiness >= 50:
             readiness_color = "#F59E0B"
-            readiness_label = "Needs Attention"
+            readiness_title = "ACTION REQUIRED BEFORE SUBMISSION"
+            readiness_desc = "Detected discrepancies (e.g. name variations or academic year mismatch) that could delay or reject your scholarship."
+            status_icon = "🟡"
         else:
             readiness_color = "#EF4444"
-            readiness_label = "Significant Issues"
+            readiness_title = "CRITICAL DISCREPANCIES DETECTED"
+            readiness_desc = "High rejection probability on MahaDBT portal. Mandatory documents or eligibility criteria are missing."
+            status_icon = "🔴"
 
         st.markdown(f"""
-        <div class="info-card" style="border-left-color: {readiness_color};">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: white; border: 1px solid var(--border); border-left: 6px solid {readiness_color}; border-radius: 12px; padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <strong style="font-size: 1.1rem;">Application Readiness: {readiness:.0f}%</strong>
-                    <br><span style="color: var(--text-secondary);">Status: {readiness_label}</span>
+                    <div style="font-size: 0.8rem; font-weight: 700; color: {readiness_color}; text-transform: uppercase; letter-spacing: 0.05em;">
+                        {status_icon} {readiness_title}
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: #1E293B; margin: 0.2rem 0;">
+                        Readiness Score: {readiness:.0f}%
+                    </div>
+                    <div style="color: #64748B; font-size: 0.88rem;">{readiness_desc}</div>
                 </div>
-                <div style="font-size: 2rem;">{
-                    '✅' if readiness >= 80 else '⚠️' if readiness >= 50 else '❌'
-                }</div>
+                <div style="text-align: right;">
+                    <span class="badge {'badge-pass' if readiness >= 80 else 'badge-warning' if readiness >= 50 else 'badge-critical'}" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                        {readiness:.0f}% COMPLIANT
+                    </span>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        st.progress(readiness / 100)
+        st.progress(readiness / 100.0)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Detailed Results ──
-        st.markdown("### 📋 Detailed Verification Results")
+        # ── Interactive Severity Filter Bar ──
+        st.markdown("### 📋 Verification Checks Audit")
 
         checks = verification_result.get("checks", [])
 
-        # Filter options
-        filter_col1, filter_col2 = st.columns([1, 3])
-        with filter_col1:
-            severity_filter = st.selectbox(
-                "Filter by severity",
+        # Filter Pills
+        filter_col, search_col = st.columns([3, 2])
+        with filter_col:
+            selected_filter = st.radio(
+                "Filter Checks",
                 options=["All", "CRITICAL", "WARNING", "MANUAL_REVIEW", "PASS"],
+                format_func=lambda x: f"All ({len(checks)})" if x == "All" else f"{x} ({sum(1 for c in checks if c.get('severity') == x)})",
+                horizontal=True,
+                label_visibility="collapsed"
             )
 
-        # Sort: Critical first, then Warning, then Manual Review, then Pass
+        with search_col:
+            kw = st.text_input("Filter by keyword", placeholder="e.g. Name, Year, Domicile...", label_visibility="collapsed").strip().lower()
+
+        # Filter and sort
         severity_order = {"CRITICAL": 0, "WARNING": 1, "MANUAL_REVIEW": 2, "PASS": 3}
-        sorted_checks = sorted(checks, key=lambda c: severity_order.get(c.get("severity", "PASS"), 4))
+        filtered_checks = sorted(checks, key=lambda c: severity_order.get(c.get("severity", "PASS"), 4))
 
-        if severity_filter != "All":
-            sorted_checks = [c for c in sorted_checks if c.get("severity") == severity_filter]
+        if selected_filter != "All":
+            filtered_checks = [c for c in filtered_checks if c.get("severity") == selected_filter]
 
-        for i, check in enumerate(sorted_checks):
+        if kw:
+            filtered_checks = [
+                c for c in filtered_checks
+                if kw in c.get("check_name", "").lower()
+                or kw in c.get("reason", "").lower()
+                or kw in c.get("field_checked", "").lower()
+            ]
+
+        # Render Check Cards
+        if not filtered_checks:
+            st.info("No checks match the selected filter.")
+
+        for i, check in enumerate(filtered_checks):
             severity = check.get("severity", "PASS")
+            check_id = check.get("check_id", str(i))
 
-            # Style based on severity
+            # Style classes
             styles = {
-                "CRITICAL": ("error-card", "🔴", "#EF4444"),
-                "WARNING": ("warning-card", "🟡", "#F59E0B"),
-                "MANUAL_REVIEW": ("info-card", "🔵", "#3B82F6"),
-                "PASS": ("success-card", "🟢", "#10B981"),
+                "CRITICAL": ("error-card", "🔴", "badge-critical"),
+                "WARNING": ("warning-card", "🟡", "badge-warning"),
+                "MANUAL_REVIEW": ("info-card", "🔵", "badge-review"),
+                "PASS": ("success-card", "🟢", "badge-pass"),
             }
-            card_class, icon, color = styles.get(severity, ("info-card", "⚪", "#64748B"))
+            card_class, icon, badge_class = styles.get(severity, ("info-card", "⚪", "badge-review"))
 
-            with st.expander(f"{icon} {check.get('check_name', 'Check')} — {severity}", expanded=(severity in ["CRITICAL", "WARNING"])):
-                st.markdown(f"**Field Checked:** {check.get('field_checked', 'N/A')}")
+            is_open = severity in ["CRITICAL", "WARNING"]
+            with st.expander(f"{icon} {check.get('check_name', 'Check')} — {severity}", expanded=is_open):
+                st.markdown(f"**Field Verified:** `{check.get('field_checked', 'General')}`")
 
                 # Document sources
                 sources = check.get("document_sources", [])
                 if sources:
                     source_names = [DOCUMENT_TYPES.get(s, {}).get("display_name", s) for s in sources]
-                    st.markdown(f"**Documents:** {', '.join(source_names)}")
+                    st.markdown(f"**Document Sources:** {', '.join(source_names)}")
 
                 # Extracted values
                 values = check.get("extracted_values", {})
                 if values:
-                    st.markdown("**Extracted Values:**")
+                    st.markdown("**Values Compared:**")
                     for doc, val in values.items():
                         doc_name = DOCUMENT_TYPES.get(doc, {}).get("display_name", doc)
                         st.markdown(f"  - *{doc_name}*: `{val}`")
 
-                # Comparison result
+                # Comparison result & reason
                 if check.get("comparison_result"):
-                    st.markdown(f"**Result:** {check['comparison_result']}")
+                    st.markdown(f"**Comparison Detail:** {check['comparison_result']}")
 
-                # Reason
-                st.markdown(f"**Reason:** {check.get('reason', 'N/A')}")
+                st.markdown(f"**Audit Findings:** {check.get('reason', 'N/A')}")
 
                 # Recommended action
                 if check.get("recommended_action"):
                     st.info(f"💡 **Recommended Action:** {check['recommended_action']}")
 
+                # Interactive Action Bar inside issue
                 if severity in ["CRITICAL", "WARNING", "MANUAL_REVIEW"]:
-                    col_act1, col_act2 = st.columns([2, 1])
-                    with col_act2:
-                        chk_key = f"chk_ai_{check.get('check_id', str(i))}"
+                    act_c1, act_c2 = st.columns([2, 1])
+                    with act_c2:
+                        chk_key = f"chk_ai_{check_id}"
                         if st.button("🤖 Explain with AI", key=chk_key, use_container_width=True):
                             from pages.assistant import _explain_issue_in_chat
                             _explain_issue_in_chat(check, st.session_state.get("language", "en"))
                             st.session_state.current_page = "assistant"
                             st.rerun()
 
-        # ── Checklist Summary ──
+        # ── Interactive Remediation Tracker ──
         st.markdown("---")
-        st.markdown("### ✅ Application Readiness Checklist")
+        st.markdown("### 📝 Applicant Remediation Tracker")
+        st.caption("Check off items as you fix them in your official application documents before final portal submission:")
 
-        # Group checks by category
-        pass_checks = [c for c in checks if c.get("severity") == "PASS"]
         issue_checks = [c for c in checks if c.get("severity") != "PASS"]
-
-        for check in pass_checks:
-            st.markdown(f"""
-            <div class="checklist-item checklist-pass">
-                ✅ {check.get('check_name', 'Check')}
-            </div>
-            """, unsafe_allow_html=True)
-
-        for check in issue_checks:
-            severity = check.get("severity", "WARNING")
-            cls = "checklist-fail" if severity == "CRITICAL" else "checklist-warning"
-            icon = "❌" if severity == "CRITICAL" else "⚠️" if severity == "WARNING" else "🔍"
-            st.markdown(f"""
-            <div class="checklist-item {cls}">
-                {icon} {check.get('check_name', 'Check')} — <em>{check.get('reason', '')}</em>
-            </div>
-            """, unsafe_allow_html=True)
+        if issue_checks:
+            for c in issue_checks:
+                cid = c.get("check_id", c.get("check_name"))
+                cur_remedied = st.session_state.remediation_status.get(cid, False)
+                remedied = st.checkbox(
+                    f"Resolved: {c.get('check_name')} ({c.get('severity')})",
+                    value=cur_remedied,
+                    key=f"rem_{cid}"
+                )
+                st.session_state.remediation_status[cid] = remedied
+        else:
+            st.success("🎉 All verification checks passed! No remediation necessary.")
 
         # Disclaimer
         st.markdown("---")
         st.caption(f"⚠️ {DISCLAIMER}")
 
-    # ── Navigation ──
+    # ── Bottom Navigation ──
     st.markdown("<br>", unsafe_allow_html=True)
-    col_back, col_assistant, col_report = st.columns(3)
+    nav_col1, nav_col2, nav_col3 = st.columns([1, 1.5, 1.2])
 
-    with col_back:
+    with nav_col1:
         if st.button("← Back to Extraction", use_container_width=True):
             st.session_state.current_page = "extraction"
             st.rerun()
 
-    with col_assistant:
-        if st.button("🤖 AI Assistant", use_container_width=True, disabled=not verification_result):
+    with nav_col2:
+        if st.button("🤖 Consult AI Assistant", use_container_width=True, disabled=not verification_result):
             st.session_state.current_page = "assistant"
             st.rerun()
 
-    with col_report:
-        if st.button("📋 Generate Report →", type="primary", use_container_width=True, disabled=not verification_result):
+    with nav_col3:
+        if st.button("Generate Report ➡️", type="primary", use_container_width=True, disabled=not verification_result):
             st.session_state.current_page = "report"
             st.rerun()
 
@@ -252,7 +294,6 @@ def render_verification():
 def _run_verification(extractions: dict):
     """Run the cross-document verification engine."""
     progress = st.progress(0, text="Initializing verification engine...")
-
     start_time = time.time()
 
     scheme_id = st.session_state.get("scheme_id", "mahadbt_postmatric")
@@ -268,40 +309,32 @@ def _run_verification(extractions: dict):
     )
 
     progress.progress(0.2, text="Checking document presence...")
-
-    # Run all checks
     checks = []
 
-    # 1. Required document presence checks
-    presence_checks = engine.check_required_documents(extractions)
-    checks.extend(presence_checks)
+    # 1. Required document presence
+    checks.extend(engine.check_required_documents(extractions))
     progress.progress(0.35, text="Checking name consistency...")
 
     # 2. Name consistency checks
-    name_checks = engine.check_name_consistency(extractions)
-    checks.extend(name_checks)
-    progress.progress(0.50, text="Checking date consistency...")
+    checks.extend(engine.check_name_consistency(extractions))
+    progress.progress(0.50, text="Checking date & academic year consistency...")
 
     # 3. Date and academic year checks
-    date_checks = engine.check_date_consistency(extractions)
-    checks.extend(date_checks)
+    checks.extend(engine.check_date_consistency(extractions))
     progress.progress(0.65, text="Checking missing fields...")
 
     # 4. Missing field checks
-    field_checks = engine.check_missing_fields(extractions)
-    checks.extend(field_checks)
+    checks.extend(engine.check_missing_fields(extractions))
     progress.progress(0.80, text="Running scheme-specific checks...")
 
     # 5. Scheme-specific checks
-    scheme_checks = engine.check_scheme_requirements(extractions)
-    checks.extend(scheme_checks)
-    progress.progress(0.90, text="Checking for duplicates...")
+    checks.extend(engine.check_scheme_requirements(extractions))
+    progress.progress(0.90, text="Checking duplicate documents...")
 
     # 6. Duplicate document detection
-    dup_checks = engine.check_duplicate_documents(st.session_state.get("uploaded_documents", {}))
-    checks.extend(dup_checks)
+    checks.extend(engine.check_duplicate_documents(st.session_state.get("uploaded_documents", {})))
 
-    # Compute counts
+    # Compute metrics
     pass_count = sum(1 for c in checks if c["severity"] == "PASS")
     warning_count = sum(1 for c in checks if c["severity"] == "WARNING")
     critical_count = sum(1 for c in checks if c["severity"] == "CRITICAL")
@@ -309,7 +342,6 @@ def _run_verification(extractions: dict):
     total = len(checks)
 
     overall_readiness = round((pass_count / total * 100), 1) if total > 0 else 0
-
     processing_time = time.time() - start_time
 
     verification_result = {
@@ -329,13 +361,11 @@ def _run_verification(extractions: dict):
     }
 
     st.session_state.verification_result = verification_result
-
-    # Update stats
     st.session_state.total_issues_found = (
         st.session_state.get("total_issues_found", 0) + warning_count + critical_count
     )
 
-    # Add to session history
+    # Add to sessions history
     sessions = st.session_state.get("sessions_history", [])
     sessions.append({
         "scheme_name": scheme_data.get("name", "Unknown"),
@@ -346,4 +376,4 @@ def _run_verification(extractions: dict):
     })
     st.session_state.sessions_history = sessions
 
-    progress.progress(1.0, text=f"Verification complete! ({processing_time:.1f}s)")
+    progress.progress(1.0, text=f"Verification complete in {processing_time:.2f}s!")
